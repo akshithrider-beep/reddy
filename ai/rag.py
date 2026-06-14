@@ -48,7 +48,12 @@ global INDEX_READY
 
 if not INDEX_READY:
     build_index()
-    INDEX_READY = True(query: str, k: int = 5) -> List[Question]:
+ INDEX_READY = True
+
+def search_similar_questions(query: str, k: int = 5) -> List[Question]:
+
+
+
     if model is None or index.ntotal == 0:
         # Fallback to simple text search if model failed or index empty
         from services.question_svc import search_questions as fallback_search
