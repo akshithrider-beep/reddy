@@ -8,11 +8,13 @@ import os
 
 # Load a lightweight local embedding model
 # all-MiniLM-L6-v2 is fast and good for semantic search
-try:
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-except Exception as e:
-    print(f"Failed to load sentence-transformers model. RAG may not work: {e}")
-    model = None
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model
 
 # In-memory FAISS index
 dimension = 384 # Output dimension of all-MiniLM-L6-v2
@@ -21,8 +23,7 @@ question_registry = [] # To map index back to question objects
 
 def build_index():
     global index, question_registry
-    if model is None:
-        return
+    model = get_model()
 
     questions = load_all_questions()
     if not questions:
@@ -43,7 +44,11 @@ def build_index():
     question_registry = questions
     print("FAISS index built successfully.")
 
-def search_similar_questions(query: str, k: int = 5) -> List[Question]:
+global INDEX_READY
+
+if not INDEX_READY:
+    build_index()
+    INDEX_READY = True(query: str, k: int = 5) -> List[Question]:
     if model is None or index.ntotal == 0:
         # Fallback to simple text search if model failed or index empty
         from services.question_svc import search_questions as fallback_search
@@ -61,4 +66,4 @@ def search_similar_questions(query: str, k: int = 5) -> List[Question]:
 
 # Build index on module import (runs once when server starts)
 # In production, you'd save/load the .faiss file instead of rebuilding on every boot.
-build_index()
+INDEX_READY = False
